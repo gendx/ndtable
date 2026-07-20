@@ -1,0 +1,17 @@
+[package]
+name = "ndtable"
+description = ""
+version = "0.1.0"
+authors = ["Guillaume Endignoux <ggendx@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/gendx/ndtable"
+categories = ["data-structures"]
+keywords = ["dynamic-programming", "matrix", "memoization", "multidimensional", "tensor"]
+exclude = [".github/*"]
+edition = "2024"
+rust-version = "1.91.0"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
+
+[dependencies]
