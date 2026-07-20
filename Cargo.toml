@@ -1,6 +1,6 @@
 [package]
 name = "ndtable"
-description = ""
+description = "Simple dense and sparse multi-dimensional tables"
 version = "0.1.0"
 authors = ["Guillaume Endignoux <ggendx@gmail.com>"]
 license = "MIT"
