@@ -12,6 +12,7 @@
 #![forbid(missing_docs, unsafe_code)]
 
 use std::collections::HashMap;
+use std::hash::{BuildHasher, RandomState};
 use std::ops::{Index, IndexMut};
 
 /// A dense N-dimensional table.
@@ -110,35 +111,35 @@ impl<T, const N: usize> IndexMut<[usize; N]> for TableNd<T, N> {
 }
 
 /// A sparse N-dimensional table.
-pub struct SparseTableNd<T, const N: usize> {
+pub struct SparseTableNd<T, const N: usize, S = RandomState> {
     size: [usize; N],
-    matrix: HashMap<usize, T>,
+    matrix: HashMap<usize, T, S>,
 }
 
 /// A sparse 2-dimensional table.
-pub type SparseTable2d<T> = SparseTableNd<T, 2>;
+pub type SparseTable2d<T, S = RandomState> = SparseTableNd<T, 2, S>;
 /// A sparse 3-dimensional table.
-pub type SparseTable3d<T> = SparseTableNd<T, 3>;
+pub type SparseTable3d<T, S = RandomState> = SparseTableNd<T, 3, S>;
 /// A sparse 4-dimensional table.
-pub type SparseTable4d<T> = SparseTableNd<T, 4>;
+pub type SparseTable4d<T, S = RandomState> = SparseTableNd<T, 4, S>;
 /// A sparse 5-dimensional table.
-pub type SparseTable5d<T> = SparseTableNd<T, 5>;
+pub type SparseTable5d<T, S = RandomState> = SparseTableNd<T, 5, S>;
 /// A sparse 6-dimensional table.
-pub type SparseTable6d<T> = SparseTableNd<T, 6>;
+pub type SparseTable6d<T, S = RandomState> = SparseTableNd<T, 6, S>;
 /// A sparse 7-dimensional table.
-pub type SparseTable7d<T> = SparseTableNd<T, 7>;
+pub type SparseTable7d<T, S = RandomState> = SparseTableNd<T, 7, S>;
 /// A sparse 8-dimensional table.
-pub type SparseTable8d<T> = SparseTableNd<T, 8>;
+pub type SparseTable8d<T, S = RandomState> = SparseTableNd<T, 8, S>;
 /// A sparse 9-dimensional table.
-pub type SparseTable9d<T> = SparseTableNd<T, 9>;
+pub type SparseTable9d<T, S = RandomState> = SparseTableNd<T, 9, S>;
 /// A sparse 10-dimensional table.
-pub type SparseTable10d<T> = SparseTableNd<T, 10>;
+pub type SparseTable10d<T, S = RandomState> = SparseTableNd<T, 10, S>;
 /// A sparse 11-dimensional table.
-pub type SparseTable11d<T> = SparseTableNd<T, 11>;
+pub type SparseTable11d<T, S = RandomState> = SparseTableNd<T, 11, S>;
 /// A sparse 12-dimensional table.
-pub type SparseTable12d<T> = SparseTableNd<T, 12>;
+pub type SparseTable12d<T, S = RandomState> = SparseTableNd<T, 12, S>;
 
-impl<T, const N: usize> SparseTableNd<T, N> {
+impl<T, const N: usize> SparseTableNd<T, N, RandomState> {
     /// Creates a new sparse table of the given size.
     pub fn new(size: [usize; N]) -> Self {
         product(&size);
@@ -147,7 +148,9 @@ impl<T, const N: usize> SparseTableNd<T, N> {
             matrix: HashMap::new(),
         }
     }
+}
 
+impl<T, const N: usize, S> SparseTableNd<T, N, S> {
     /// Returns the multi-dimensional size of this table.
     pub fn size(&self) -> &[usize; N] {
         &self.size
@@ -168,6 +171,17 @@ impl<T, const N: usize> SparseTableNd<T, N> {
     /// Checks if this table is empty.
     pub fn is_empty(&self) -> bool {
         self.matrix.is_empty()
+    }
+}
+
+impl<T, const N: usize, S: BuildHasher> SparseTableNd<T, N, S> {
+    /// Creates a new sparse table of the given size.
+    pub fn with_hasher(size: [usize; N], hash_builder: S) -> Self {
+        product(&size);
+        Self {
+            size,
+            matrix: HashMap::with_hasher(hash_builder),
+        }
     }
 
     /// Inserts a value at the given index, returning [`Some(_)`](Option::Some)
