@@ -11,7 +11,7 @@
 
 #![forbid(missing_docs, unsafe_code)]
 
-use std::collections::HashMap;
+use std::collections::{HashMap, hash_map};
 use std::hash::{BuildHasher, RandomState};
 use std::ops::{Index, IndexMut};
 
@@ -184,6 +184,11 @@ impl<T, const N: usize, S: BuildHasher> SparseTableNd<T, N, S> {
         }
     }
 
+    /// Returns an entry at the given index for in-place manipulation.
+    pub fn entry(&mut self, index: [usize; N]) -> Entry<'_, T> {
+        Entry::new(self.matrix.entry(flatten_index(&index, &self.size)))
+    }
+
     /// Inserts a value at the given index, returning [`Some(_)`](Option::Some)
     /// if a previous value was set.
     pub fn insert(&mut self, index: [usize; N], value: T) -> Option<T> {
@@ -204,6 +209,100 @@ impl<T, const N: usize, S: BuildHasher> SparseTableNd<T, N, S> {
     /// Retrieves a reference to the value at the given index.
     pub fn get_mut(&mut self, index: [usize; N]) -> Option<&mut T> {
         self.matrix.get_mut(&flatten_index(&index, &self.size))
+    }
+}
+
+/// Entry in a [`SparseTableNd`].
+pub enum Entry<'a, T> {
+    /// An entry that contains a value.
+    Occupied(OccupiedEntry<'a, T>),
+    /// An empty entry.
+    Vacant(VacantEntry<'a, T>),
+}
+
+impl<'a, T> Entry<'a, T> {
+    fn new(entry: hash_map::Entry<'a, usize, T>) -> Self {
+        match entry {
+            hash_map::Entry::Occupied(e) => Entry::Occupied(OccupiedEntry(e)),
+            hash_map::Entry::Vacant(e) => Entry::Vacant(VacantEntry(e)),
+        }
+    }
+
+    /// Ensures a value is in the entry by inserting the default if empty, and
+    /// returns a mutable reference to the value in the entry.
+    pub fn or_insert(self, default: T) -> &'a mut T {
+        match self {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.insert(default),
+        }
+    }
+
+    /// Ensures a value is in the entry by inserting the result of the default
+    /// function if empty, and returns a mutable reference to the value in the
+    /// entry.
+    pub fn or_insert_with(self, default: impl FnOnce() -> T) -> &'a mut T {
+        match self {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.insert(default()),
+        }
+    }
+
+    /// Provides in-place mutable access to an occupied entry before any
+    /// potential insert.
+    pub fn and_modify(self, f: impl FnOnce(&mut T)) -> Self {
+        match self {
+            Entry::Occupied(mut entry) => {
+                f(entry.get_mut());
+                Entry::Occupied(entry)
+            }
+            Entry::Vacant(entry) => Entry::Vacant(entry),
+        }
+    }
+}
+
+/// An occupied entry in a [`SparseTableNd`]. It is part of the [`Entry`] enum.
+pub struct OccupiedEntry<'a, T>(hash_map::OccupiedEntry<'a, usize, T>);
+
+impl<'a, T> OccupiedEntry<'a, T> {
+    /// Gets a reference to the value in the entry.
+    pub fn get(&self) -> &T {
+        self.0.get()
+    }
+
+    /// Gets a mutable reference to the value in the entry.
+    pub fn get_mut(&mut self) -> &mut T {
+        self.0.get_mut()
+    }
+
+    /// Converts this entry into a mutable reference to the value in the entry
+    /// with a lifetime bound to the table itself.
+    pub fn into_mut(self) -> &'a mut T {
+        self.0.into_mut()
+    }
+
+    /// Sets the value of the entry, and returns the entry's old value.
+    pub fn insert(&mut self, value: T) -> T {
+        self.0.insert(value)
+    }
+
+    /// Takes the value out of the entry, and returns it.
+    pub fn remove(self) -> T {
+        self.0.remove()
+    }
+}
+
+/// A vacant entry in a [`SparseTableNd`]. It is part of the [`Entry`] enum.
+pub struct VacantEntry<'a, T>(hash_map::VacantEntry<'a, usize, T>);
+
+impl<'a, T> VacantEntry<'a, T> {
+    /// Sets the value of the entry and returns a mutable reference to it.
+    pub fn insert(self, value: T) -> &'a mut T {
+        self.0.insert(value)
+    }
+
+    /// Sets the value of the entry and returns an [`OccupiedEntry`].
+    pub fn insert_entry(self, value: T) -> OccupiedEntry<'a, T> {
+        OccupiedEntry(self.0.insert_entry(value))
     }
 }
 
