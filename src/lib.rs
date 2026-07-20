@@ -79,12 +79,12 @@ impl<T, const N: usize> TableNd<Option<T>, N> {
     /// Returns the capacity of this table, i.e. the total number of memory
     /// slots available.
     ///
-    /// This is the product of the [`size()`].
+    /// This is the product of the [`size()`](Self::size).
     pub fn capacity(&self) -> usize {
         product(&self.size)
     }
 
-    /// Returns the number of values set to [`Some(_)`].
+    /// Returns the number of values set to [`Some(_)`](Option::Some).
     pub fn len(&self) -> usize {
         self.matrix.iter().filter(|x| x.is_some()).count()
     }
@@ -155,7 +155,7 @@ impl<T, const N: usize> SparseTableNd<T, N> {
 
     /// Returns the capacity of this table.
     ///
-    /// This is the product of the [`size()`].
+    /// This is the product of the [`size()`](Self::size).
     pub fn capacity(&self) -> usize {
         product(&self.size)
     }
@@ -170,14 +170,14 @@ impl<T, const N: usize> SparseTableNd<T, N> {
         self.matrix.is_empty()
     }
 
-    /// Inserts a value at the given index, returning [`Some(_)`] if a previous
-    /// value was set.
+    /// Inserts a value at the given index, returning [`Some(_)`](Option::Some)
+    /// if a previous value was set.
     pub fn insert(&mut self, index: [usize; N], value: T) -> Option<T> {
         self.matrix.insert(flatten_index(&index, &self.size), value)
     }
 
-    /// Remove the value at the given index, returning [`Some(_)`] if a previous
-    /// value was set.
+    /// Remove the value at the given index, returning [`Some(_)`](Option::Some)
+    /// if a previous value was set.
     pub fn remove(&mut self, index: [usize; N]) -> Option<T> {
         self.matrix.remove(&flatten_index(&index, &self.size))
     }
