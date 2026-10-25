@@ -16,6 +16,7 @@ use std::hash::{BuildHasher, RandomState};
 use std::ops::{Index, IndexMut};
 
 /// A dense N-dimensional table.
+#[derive(Clone)]
 pub struct TableNd<T, const N: usize> {
     size: [usize; N],
     matrix: Box<[T]>,
@@ -43,6 +44,15 @@ pub type Table10d<T> = TableNd<T, 10>;
 pub type Table11d<T> = TableNd<T, 11>;
 /// A dense 12-dimensional table.
 pub type Table12d<T> = TableNd<T, 12>;
+
+impl<T, const N: usize> Default for TableNd<T, N> {
+    fn default() -> Self {
+        Self {
+            size: [0; N],
+            matrix: Box::new([]),
+        }
+    }
+}
 
 impl<T: Default + Clone, const N: usize> TableNd<T, N> {
     /// Creates a new dense table initialized with default values.
@@ -111,6 +121,7 @@ impl<T, const N: usize> IndexMut<[usize; N]> for TableNd<T, N> {
 }
 
 /// A sparse N-dimensional table.
+#[derive(Clone)]
 pub struct SparseTableNd<T, const N: usize, S = RandomState> {
     size: [usize; N],
     matrix: HashMap<usize, T, S>,
@@ -138,6 +149,18 @@ pub type SparseTable10d<T, S = RandomState> = SparseTableNd<T, 10, S>;
 pub type SparseTable11d<T, S = RandomState> = SparseTableNd<T, 11, S>;
 /// A sparse 12-dimensional table.
 pub type SparseTable12d<T, S = RandomState> = SparseTableNd<T, 12, S>;
+
+impl<T, const N: usize, S> Default for SparseTableNd<T, N, S>
+where
+    S: Default,
+{
+    fn default() -> Self {
+        Self {
+            size: [0; N],
+            matrix: HashMap::with_hasher(S::default()),
+        }
+    }
+}
 
 impl<T, const N: usize> SparseTableNd<T, N, RandomState> {
     /// Creates a new sparse table of the given size.
